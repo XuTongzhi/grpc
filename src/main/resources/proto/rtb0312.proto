@@ -1,0 +1,580 @@
+// Copyright (c) 2014 Tencent Inc.
+
+package gdt.adx;
+
+message BidRequest {
+  // ADX提供的BidRequest唯一标识
+  optional string id = 1;
+
+  // true表示探测网络延迟，不触发竞价逻辑
+  // DSP设置request_id和processing_time_ms后立即返回BidResponse
+  // DSP必须支持此特性
+  optional bool is_ping = 2 [default = false];
+
+  // true表示测试请求，竞价成功的广告不会被展示和计费
+  // DSP对此类请求的处理完全同普通请求
+  // DSP必须支持此特性
+  optional bool is_test = 3 [default = false];
+
+  message Impression {
+    // BidRequest范围内，Impression唯一标识
+    optional string id = 1;
+
+    // ADX提供的广告位id
+    optional int64 placement_id = 2;
+
+    // 广告位支持的素材规格列表
+    // 取值见《广告样式说明.xlsx 》
+    repeated int32 creative_specs = 3;
+
+    // 广告位底价，CPM，单位:分
+    optional int32 bid_floor = 4;
+
+    // 广告位过滤的行业ID列表
+    // 取值见《广告主行业分类.xlsx》
+    repeated int64 blocking_industry_id = 5;
+
+    // 原生广告位信息
+    message Native {
+      // 原生广告位要素
+      enum Fields {
+        // 标题，应用名称
+        HEADLINE = 0x1;
+        // 图标，应用图标
+        ICON = 0x2;
+        // 主图
+        IMAGE = 0x4;
+        // 描述
+        DESCRIPTION = 0x8;
+      }
+
+      // 所需要的原生广告位要素，按照比特位填充
+      optional uint64 required_fields = 1;
+
+      // 原生广告类型
+      enum Type {
+        // 普链
+        LINK = 0;
+        // 应用
+        APP = 1;
+      }
+
+      optional Type type = 2;
+    }
+
+    repeated Native natives = 6;
+
+    // CPD或者合约CPM的合同号
+    repeated string contract_code = 7;
+
+    // 广告位支持的素材类型列表，比如jpeg，gif等, 为空的时候不做限制
+    repeated string multimedia_type_white_list = 8;
+
+    // 广告位过滤的应用名称
+    repeated string blocking_appname = 9;
+    // 广告位过滤的关键字
+    repeated string blocking_keyword = 10;
+    // 当advertiser_whitelist非空时，adx只接受白名单广告主的广告
+    repeated string advertiser_whitelist = 11;
+    // 广告位过滤的广告主
+    repeated string advertiser_blacklist = 12;
+
+    // 命中的pretargeting配置的id
+    repeated string pretargeting_ids = 13;
+    // preferred deal使用的deal id
+    repeated string deal_ids = 14;
+
+    enum ProductType {
+      PRODUCT_TYPE_UNKNOWN = 0;
+      PRODUCT_TYPE_PAGE_LINK = 1;  // 普通链接
+      PRODUCT_TYPE_ANDROID_APP = 2;  // android app
+      PRODUCT_TYPE_IOS_APP = 3;   // ios app
+      PRODUCT_TYPE_WECHAT_LINK = 4;  // 微信普通链接
+    }
+
+    // 广告位支持的产品类型
+    repeated ProductType product_types = 15;
+
+    // 是否支持动态创意广告
+    optional bool support_dynamic_creative = 16;
+
+    // 广告位CPC底价，会发送给DSP, 单位：分/次
+    optional uint64 cpc_bid_floor = 17;
+
+    // ADX提供的加密后广告位id
+    optional uint64 encrypted_placement_id = 18;
+
+    // 广告位类型，仅限联盟流量
+    optional uint32 placement_type = 19;
+
+    enum CostType {
+      COSTTYPE_UNKNOWN                            = 0;  // unknown
+      COSTTYPE_CPC                                = 1;  // CPC扣费
+      COSTTYPE_CPA                                = 2;  // CPA扣费
+      COSTTYPE_CPS                                = 3;  // CPS扣费
+      COSTTYPE_CPM                                = 4;  // CPM扣费
+      COSTTYPE_CPD                                = 5;  // CPD扣费
+      COSTTYPE_CPT                                = 6;  // CPT扣费
+    }
+    // 广告位支持的计费类型
+    repeated CostType support_cost_types = 20;
+
+    // 广告位ECPM底价，会发送给DSP, 单位：分/千次曝光
+    optional uint32 ecpm_bid_floor = 21;
+  }
+
+  repeated Impression impressions = 4;
+
+  enum DeviceType {
+    DEVICETYPE_UNKNOWN = 0;
+    DEVICETYPE_PC = 1;
+    DEVICETYPE_MOBILE = 2;
+    DEVICETYPE_PAD = 3;
+  }
+
+  enum Carrier {
+    CARRIER_UNKNOWN = 0;
+    CARRIER_CHINAMOBILE = 1;
+    CARRIER_CHINAUNICOM = 2;
+    CARRIER_CHINATELECOM = 3;
+  }
+
+  enum ConnectionType {
+    CONNECTIONTYPE_UNKNOWN = 0;
+    CONNECTIONTYPE_WIFI = 1;
+    CONNECTIONTYPE_2G = 2;
+    CONNECTIONTYPE_3G = 3;
+    CONNECTIONTYPE_4G = 4;
+  }
+
+  enum OperatingSystem {
+    OS_UNKNOWN = 0;
+    OS_IOS = 1;
+    OS_ANDROID = 2;
+    OS_WINDOWS = 3;
+    OS_SYMBIAN = 4;
+    OS_JAVA = 5;
+  }
+
+  message Device {
+    // 设备唯一标示
+    // Android用IMEI md5sum，iOS用IDFA md5sum，其他用MAC地址
+    optional string id = 1;
+
+    optional DeviceType device_type = 2;
+
+    optional OperatingSystem os = 3;
+
+    optional string os_version = 4;
+
+    optional string user_agent = 5;
+
+    // 屏幕宽度，单位:像素
+    optional int32 screen_width = 6;
+
+    // 屏幕高度，单位:像素
+    optional int32 screen_height = 7;
+
+    // 屏幕每英寸像素
+    optional int32 dpi = 8;
+
+    optional Carrier carrier = 9;
+
+    optional ConnectionType connection_type = 10;
+
+    // 设备的品牌型号
+    optional string brand_and_model = 11;
+
+    // 设备的语言，zh en等
+    optional string language = 12;
+
+    // iOS设备的IDFA明文
+    optional string idfa = 13;
+
+    // 设备生产厂家
+    optional string manufacturer = 14;
+
+    // Android设备的Android ID，取md5sum摘要，摘要小写
+    optional string android_id = 15;
+
+    // 设备价格, 暂时未使用
+    optional uint32 price = 16;
+
+    // http://tapd.oa.com/g_QZPC_Dev_Adv/prong/stories/view/1010013671059561631
+    // 当idfa或者是imei的设备号无效的时候,为true
+    optional bool device_id_invalid = 17;
+
+    // oaid原始值
+    optional string oaid = 18;
+
+    // dsp选定且用户已安装的app
+    repeated uint32 target_app_name_hashs = 19 [packed=true];
+
+	// 多版本QAID信息
+    message QaidInfo {
+      // QAID版本，同时区分QAID含义
+      optional uint32 version = 1;
+      // QAID值
+      optional string qaid = 2;
+      // 原始版本
+      optional string origin_version = 3;
+    }
+    repeated QaidInfo qaid_infos = 20;
+  }
+
+  optional Device device = 5;
+
+  // 设备联网IP
+  optional string ip = 6;
+
+  // 部分流量上可能没有有效IP，此时用地域码做定向
+  // 取值见《广点通地域码》
+  optional int32 area_code = 7;
+
+  message User {
+    optional string id = 1;
+
+    message Demographic {
+      enum Gender {
+        GENDER_UNKNOWN = 0;  // 性别未知
+        GENDER_MALE = 1;  // 男
+        GENDER_FEMALE = 2;  // 女
+      }
+      optional Gender gender = 1 [default = GENDER_UNKNOWN];
+
+      // 学历
+      enum Education {
+        EDUCATION_UNKNOWN = 0;  // 学历未知
+        EDUCATION_DOCTOR = 1;  // 博士
+        EDUCATION_MASTER = 2;  // 硕士
+        EDUCATION_COLLEGE = 3;  // 大学生
+        EDUCATION_HIGH_SCHOOL = 4;  // 高中
+        EDUCATION_MIDDLE_SCHOOL = 5;  // 初中
+        EDUCATION_PRIMARY_SCHOOL = 6;  // 小学
+        EDUCATION_JUNIOR_COLLEGE = 7;  // 专科
+      }
+      optional Education education = 2 [default = EDUCATION_UNKNOWN];
+
+      // 年龄区间，两端都是闭区间
+      optional int32 age_low = 3 [default = 0];
+      optional int32 age_high = 4 [default = 999];
+
+      enum ConsumptionAbilityLevel {
+        CONSUMPTION_ABILITY_LEVEL_UNKNOWN = 0;  // 消费能力未知
+        CONSUMPTION_ABILITY_LEVEL_HIGH = 1;  // 高
+        CONSUMPTION_ABILITY_LEVEL_LOW = 2;  // 低
+      }
+      optional ConsumptionAbilityLevel consume_level = 5;
+      // 由LBS数据挖掘得到的用户住房价格数据
+      optional uint32 house_price = 6;
+
+      // 上网场景
+      enum SurfScene {
+        SURF_SCENE_UNKNOWN = 0;  // 上网场景未知
+        SURF_SCENE_PUBLIC = 1;  // 公共场所
+        SURF_SCENE_HOME = 2;  // 家庭
+        SURF_SCENE_OFFICE = 3;  // 办公
+        SURF_SCENE_SCHOOL = 4;  // 学校
+        SURF_SCENE_WIRELESS = 5;  // 无线上网
+      }
+      repeated SurfScene surf_scene = 7;
+
+      // 婚姻状况
+      enum MarriageStatus {
+        MARRIAGE_STATUS_UNKNOWN = 0;  // 未知
+        MARRIAGE_STATUS_SINGLE = 1;  // 单身
+        MARRIAGE_STATUS_HAVE_BABY = 2;  // 育儿
+        MARRIAGE_STATUS_NEWLY_WEDS = 3;  // 新婚
+        MARRIAGE_STATUS_IN_LOVE = 4;  // 恋爱
+        MARRIAGE_STATUS_HAVE_KID = 5;  // 子女教育
+        MARRIAGE_STATUS_MARRIED = 6;  // 已婚
+        MARRIAGE_STATUS_SECRET = 7;  // 保密
+        MARRIAGE_STATUS_ENGAGED = 8;  // 已订婚
+        MARRIAGE_STATUS_SEPARATED = 9;  // 分居
+        MARRIAGE_STATUS_DIVORCED = 10;  // 离异
+      }
+      repeated MarriageStatus marriage_status = 8;
+    }
+
+    optional Demographic user_demographic = 2;
+
+    message Vertical {
+      // 用户兴趣 id，接口预留，目前未使用
+      optional uint32 id = 1;
+      // 用户兴趣权重，接口预留，目前未使用
+      optional float weight = 2;
+    }
+    repeated Vertical verticals = 3;
+
+    // 跨屏频控id,已停用
+    optional string cross_id = 4 [deprecated = true];
+
+    message DeviceProfile {
+      // 是否新设备用户
+      optional bool new_device_user = 1;
+    }
+    optional DeviceProfile device_profile = 5;
+
+    // 付费用户特征
+    message PaymentProfile {
+      enum PaymentActionType {
+        PAYMENT_ACTION_UNKNOWN = 0;
+        PAYMENT_ACTION_POTENTIAL_VIRTUAL_PAYMENT = 1;  // 潜在虚拟消费
+        PAYMENT_ACTION_FINISHED_ELECTRONIC_COMMERCE_PAYMENT = 2;  // 已有电商消费
+      }
+      repeated PaymentActionType payment_action_types = 1;
+    }
+    optional PaymentProfile payment_profile = 6;
+
+    // 用户App行为特征
+    message AppActionProfile {
+      message AppAction {
+        // App行为类型
+        enum AppActionType {
+          APP_ACTION_TYPE_UNKNOWN = 0;
+          APP_ACTION_TYPE_ACTIVE = 1;  // App活跃行为
+          APP_ACTION_TYPE_PAY = 2;  // App付费行为
+        }
+        optional AppActionType app_action_type = 1;
+
+        message CategoryInfo {
+          optional uint64 id = 1;  // App分类ID
+          optional float weight = 2;  // 该分类ID对应的权重
+        }
+        repeated CategoryInfo category_infos = 2;
+      }
+      repeated AppAction app_actions = 1;
+    }
+    optional AppActionProfile app_action_profile = 7;
+
+    // 关键词
+    message KeyWord {
+      optional uint64 id = 1;  // 词的ID
+      optional float weight = 2;  // 该词对应的权重
+    }
+    repeated KeyWord key_words = 8;
+
+    message ShortTermProfile {
+      repeated Vertical verticals = 1;  // 用户短期标签
+    }
+    optional ShortTermProfile short_term_profile = 9 [deprecated = true];  // 用户短期画像
+
+    repeated uint32 audience_ids = 10;  // 命中的人群id
+  }
+
+  optional User user = 8;
+
+  message Geo {
+    // 纬度 * 1 000 000（火星坐标系）
+    optional int32 latitude = 1;
+
+    // 精度 * 1 000 000（火星坐标系）
+    optional int32 longitude = 2;
+
+    // 经纬度精度半径，单位米
+    optional double accuracy = 3;
+  }
+
+  optional Geo geo = 9;
+
+  message App {
+    // App所属行业id。
+    // 取值见《APP行业分类.xlsx》
+    optional int64 industry_id = 1;
+
+    // App唯一标识，Andorid应用对应其packegname，iOS应用对应其bundle id
+    optional string app_bundle_id = 2;
+
+    // 加密后App唯一标识，Andorid应用对应其packegname，iOS应用对应其bundle id
+    optional string encrypted_app_bundle_id = 3;
+  }
+
+  optional App app = 10;
+
+  // 广告主的Boss QQ号
+  optional uint64 boss_qq = 11;
+  // 是否支持应用直达, 请求级别的属性
+  optional bool support_deep_link = 12 [default = false];
+  // 微信公众号分类
+  repeated uint64 wx_flow_class = 13;
+
+  // 是否支持cpc竞价
+  optional bool is_support_cpc = 14;
+
+  // 请求级信息
+  message RequestInfo {
+    // 媒体id，目前仅限XS流量
+    optional uint64 medium_id = 1;
+    // 站点集id
+    optional uint64 siteset_id = 2;
+    // trace_id，仅限微信，朋友圈流量上标识一次请求的唯一ID，朋友圈落地页中也支持该ID
+    optional bytes trace_id = 3;
+    // 微信上的appid
+    optional bytes wechat_app_id = 4;
+  }
+  optional RequestInfo request_info = 15;
+
+  extensions 10000 to max;
+}
+
+message BidResponse {
+  // 来自BidRequest.id
+  // 替换曝光、点击地址中的宏%%BID_REQUEST_ID%%
+  // adx_modify_impression_id开关开启后，将使用seat_bids.impression_id替换宏%%BID_REQUEST_ID%%
+  optional string request_id = 1;
+
+  message Bid {
+    // DSP提供的素材id
+    optional string creative_id = 1;
+
+    // DSP最高出价，CPM或CPC，根据cost_type而定，默认CPM，单位:分
+    optional int32 bid_price = 2;
+
+    // 替换DSP曝光监测URL里的宏%%IMPRESSION_PARAM%%，最长500字节，超长截断
+    // 随素材一起上传的DSP曝光监测URL形如：
+    //  http://imp.dsp1.com?bid_request_id=%%BID_REQUEST_ID%%&
+    //  impression_param=%%IMPRESSION_PARAM%%&win_price=%%WIN_PRICE%%
+    // 通过宏%%IMPRESSION_PARAM%%，DSP可以把内部参数从竞价模块透明传输到
+    // 曝光监测模块。
+    // DSP负责参数加解密
+    optional string impression_param = 3;
+
+    // 替换DSP点击监测URL里的宏%%CLICK_PARAM%%，最长500字节，超长截断
+    // 随素材一起上传的DSP点击监测URL形如：
+    //  http://click.dsp1.com?bid_request_id=%%BID_REQUEST_ID%%&
+    //  click_param=%%CLICK_PARAM%%
+    // 通过宏%%CLICK_PARAM%%，DSP可以把内部参数从竞价模块透明传输到
+    // 点击监测模块。
+    // DSP负责参数加解密
+    optional string click_param = 4;
+
+    message DynamicCreative {
+      // DSP动态创意代码片段
+      optional string html_snippet = 1;
+
+      // 当DSP以IFrame代码片段的形式来提供动态创意的时候，
+      // 可以通过调用该JS代码提供的接口来完成以下功能:
+      // 1. 通知流量方IFrame内广告相关素材加载完成，可以展示。
+      // 2. 通知流量方发生了用户点击,流量方负责使用浏览器打开跳转地址
+      // 具体JS接口见《腾讯广点通广告交易平台接入说明文档》
+      optional bool support_gdt_helper_js = 2;
+
+      message ProductInfo {
+        optional string product_id = 1;
+        // 商品一级行业
+        // 取值见《广告主行业分类.xlsx》
+        optional int64 product_industry = 2;
+        // 商品二级行业
+        // 取值见《广告主行业分类.xlsx》
+        optional int64 product_category = 3;
+        // 商品名称
+        optional string product_name = 4;
+        // 商品描述
+        optional string product_description = 5;
+        // 商品图片地址
+        optional string product_multimedia_url = 6;
+      }
+
+      // DSP动态创意对应的商品信息
+      repeated ProductInfo product_infos = 3;
+
+      // DSP动态创意对应的点击跳转域名白名单,
+      // 当动态创意使用iframe方式不嵌入广点通js或者使用非iframe代码片段的时候，
+      // 域名白名单只需要覆盖初始打开URL的完整域名,
+      // 在浏览器打开URL后，后续的redirect不受限制
+      // 预留，暂未启用
+      repeated string click_url_domain_whitelist = 4;
+
+      // pd/pdb 动态创意模板id
+      optional uint64 template_id = 5;
+      // pd/pdb 动态创意外部商品id
+      repeated string dsp_product_ids = 6;
+    }
+
+    optional DynamicCreative dynamic_creative = 5;
+
+    // 是否让adx过滤已安装app
+    optional bool app_filter = 6 [default = false];
+    // DSP返回的deal id
+    optional string deal_id = 7;
+    // DSP实时返回的素材内容,仅支持普链类广告,不支持下载类广告
+    message CreativeDetails {
+      // DSP内部的creative id
+      // 目前仅记日志,供排查问题使用,非通过BuyerAPI创建样例广告时所用的id
+      optional string dsp_creative_id = 1;
+
+      // DSP广告的落地页,目前仅记入log
+      optional string landing_page = 2;
+
+      // DSP广告的曝光监测地址,目前仅支持一个地址,不支持302跳转,支持%%WIN_PRICE%%和__IP__宏替换,长度不超过1024字节
+      repeated string impression_monitor_urls = 3;
+
+      // DSP广告的点击跳转地址,需要最终302跳转到落地页,长度不超过1024字节
+      optional string click_through_url = 4;
+
+      // DSP广告的点击监测地址,目前仅支持一个,通过后台上报,仅支持一次302跳转,支持__IP__宏替换,长度不超过1024字节
+      repeated string click_monitor_urls = 5;
+
+      optional string deep_link_uri = 6;
+
+      optional string title = 7;
+
+      optional string description = 8;
+
+      optional string call_to_action = 9;
+
+      // 该字段废弃，不再支持实时回复logo，将使用伪广告上信息
+      optional string icon = 10;
+
+      repeated string images = 11;
+
+      optional string universal_link = 12;
+
+      // 微信小程序原始id
+      optional string mini_program_id = 13;
+      // 微信小程序地址
+      optional string mini_program_path = 14;
+    }
+
+    // DSP实时返回的素材
+    optional CreativeDetails creative_details = 8;
+
+    // 替换Dsp的Winnotice地址中的WINNOTICE_PARAM宏
+    // 对于Winnotice地址中支持BID_REQUEST_ID、WINNOTICE_PARAM、WIN_PRICE宏的替换
+    optional string winnotice_param = 9;
+
+    // 组件相关扩展信息
+    message ComponentDetails {
+      // 透传的id字段，在电话组件中为两个id，用于拼接获取电话号码的url
+      repeated uint64 param_ids = 1 [packed = true];
+    }
+    optional ComponentDetails component_details = 10;
+
+    optional string target_param = 11;
+
+    // dsp打分，将会影响媒体精排
+    optional float dsp_user_weight = 12;
+
+    extensions 10000 to max;
+  }
+
+  message SeatBid {
+    // 来自BidRequest.impressions.id
+    optional string impression_id = 1;
+
+    repeated Bid bids = 2;
+
+    // dsp返回屏蔽广告位
+    optional bool block_placement = 3;
+  }
+
+  repeated SeatBid seat_bids = 2;
+
+  // 收到BidRequest至发送完BidResponse的用时，单位:毫秒
+  optional int32 processing_time_ms = 3;
+
+  // dsp返回屏蔽该设备号
+  optional bool block_device_id = 4;
+
+  extensions 10000 to max;
+}

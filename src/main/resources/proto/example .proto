@@ -1,0 +1,10 @@
+// This file is derived from the OpenRTB specification.
+
+syntax = "proto3";
+
+message YourMessage {
+    string mediaPid = 1;
+    int32 dspId = 2;
+    string mediaName = 3;
+}
+

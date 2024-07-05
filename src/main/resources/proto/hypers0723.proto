@@ -1,0 +1,206 @@
+package com.adkit.demandsideplatform.model.rtb;
+
+option java_package = "com.adkit.demandsideplatform.model.rtb";
+option java_outer_classname = "AdkitBidding";
+
+message AdkitBidRequest{
+    // BidRequest结构版本
+    required int32 version = 1;
+    // 竞价唯一ID
+    required string bid_guid = 2;
+    // 是否是测试流量
+    optional bool is_test = 3 [default=false];
+    // 是否是心跳测试
+    optional bool is_ping = 4 [default=false];
+    repeated Impression imp= 5;
+    optional Site site =6;
+    optional App app =7;
+    optional User user= 8;
+    required Device device =9;
+
+    message Impression{
+        //一个request中的广告位序号
+        required string id = 1;
+        //
+        optional Banner banner =2;
+        //
+        optional Video video =3;
+        //ad exchange adspace id
+        optional string tagid =4;
+        // adslot min_price
+        required float bidfloor =5;
+        // 直投交易ID
+        optional string dealid =6;
+
+        message Banner{
+            required int32 w =1;
+            required int32 h =2;
+            //广告位所在页面的屏幕位置  page_num
+            optional int32 pos =3;
+            //广告位支持的mime内容类型
+            repeated string mimes =4;
+        }
+
+        message Video{
+            required int32 w =1;
+            required int32 h =2;
+            //广告位所在页面的屏幕位置  page_num
+            optional int32 pos =3;
+            //广告位支持的mime内容类型
+            repeated string mimes =4;
+            //视频播放最长 短时间
+            required int32 minduration =5;
+            required int32 maxduration =6;
+            //视频广告播放协议，默认为空
+            optional int32 protocol =7;
+            //广告展示样式：(对应protobuf view_type的视频展现形式)
+            //1：视频贴片，in-stream是视频内容流中的广告（前贴片/中贴片/后贴片）2：视频非贴片，overlay是视频内容层之上的展示广告（角标/暂停等）
+            optional int32 linearity =8;
+        }
+    }
+
+    //
+    message Site{
+        required string name =1;
+        optional string domain =2;
+        repeated string cat =3;
+        required string page =4;
+        optional string ref =5;
+        optional Publisher publisher =6;
+
+        message Publisher{
+            optional string id =1;
+            required string name =2;
+        }
+    }
+
+    message App{
+        required string name =1;
+    }
+
+    // 用户信息 仅PC 投放使用
+    message User{
+        // 浏览用户在adkit的cookie id
+        required int64 visitor_id = 1;
+        // dsp 用户 cookie id
+        optional int64 dsp_user_id= 2;
+        //用户标签
+        repeated string user_segment = 3;
+        //用户标签
+        optional string age = 4;
+        //用户标签
+        optional string gender = 5;
+    }
+
+    //设备信息
+    message Device{
+        //浏览器名称   user_agent
+        optional string user_agent =1;
+        // 浏览用户当前IP(如192.168.1.1)
+        required string ip = 2;
+        // 设备ID号
+        // 对于IOS(6.0及以上)设备，该值为idfa进行加密后的值
+        // 对于IOS(6.0以下)设备，该值为mac进行加密后的值
+        // 对于android设备，该值为imei进行加密后的值
+        optional string device_id =3;
+        // 设备的网络运营商
+        // 0-未知, 1-移动, 2-联通, 3-电信
+        optional int32 carrier = 4;
+        //浏览器语言
+        optional string language =5;
+        // 设备品牌(小写)
+        // 例如：nokia, samsung.
+        optional string brand = 6;
+        // 设备型号(小写)
+        // 例如：n70, galaxy.
+        optional string model = 7;
+        // 操作系统(小写)
+        // 例如：android, ios
+        optional string os = 8;
+        // 设备所处网络环境
+        // 0-未识别, 1-wifi, 2-2g, 3-3g, 4-4g
+        optional uint32 connectiontype = 9;
+        // 设备类型
+        // 设备类型，和0—手机，1—平板，2—PC，3—互联网电视。
+        optional uint32 devicetype = 10;
+        optional Ext ext =11;
+
+        message Ext {
+            // 设备平台(小写)
+            // 例如：android=2, iphone=0, ipad=1
+            optional int32 platform = 1;
+            // 设备所在地理位置的经度（小数点格式）
+            // 例如：116.41667
+            optional string longitude = 2;
+            // 设备所在地理位置的纬度（小数点格式）
+            // 例如：39.91667
+            optional string latitude = 3;
+            // 设备的屏幕分辨率
+            // 例如：1024x768
+            optional string screensize = 4;
+            // 设备像素比例
+            // 用于广告位size缩放，千分位表示，默认1000
+            optional int32 devicers = 5 [default=1000];
+        }
+    }
+}
+
+message AdkitBidResponse{
+    // BidResponse版本
+    required int32 version = 1;
+    // 竞价唯一ID
+    required string bid_guid = 2;
+    repeated AdSlot adslot = 3;
+
+    message AdSlot{
+        //在页面上广告位的序列id，Video和mobile默认为1
+        required int32 id = 1;
+        //当前广告位在Ad Exchange中唯一的Id
+        required int32 aid = 2;
+        //买方对该广告位的购买价格(人民币:分/千次展现) 在固定交易时只要购买价格 > 协议价格，即以协议价格成交
+        required int64 max_cpm_prices = 3;
+        //参与程序化购买的买方在Ad Exchange中的唯一ID
+        required string buyer_id = 4;
+        //广告主在买方平台Ad Exchange 中的唯一id（用于广告主审核）
+        required string advertiser_id = 5;
+        // 提供素材的方式
+        //1:图片, 2: flash（无线广告不支持）
+        //3:flv（无线广告不支持）
+        //4:代码（iframe/html代码，视频和无线广告不支持）
+        //5:VAST redirect URL（视频广告VAST3.0协议模板地址）
+        //6:VAST Inline Document（视频广告VAST3.0协议模板代码）
+        //7:MP4 (PC视频和无线视频贴片支持)
+        //8:HTML5 redirect URL（无线横幅、无线全屏和无线插屏支持）
+        //9:HTML5 Inline Document（无线横幅、无线全屏和无线插屏支持）
+        //10:ZIP(PC视频贴片支持)
+        required int32 creative_format = 6;
+        //素材的文件地址/代码/VAST协议文本/VAST协议地址
+        //HTML5代码文本/HTML5代码地址
+        //若为代码则必须实现点击宏，一共有3种 非编码支持跳转点击宏：%%MGX_CLICK_URL%% 编码点击宏：%%MGX_CLICK_URL_ESC%%
+        //两次编码点击宏：%%MGX_CLICK_URL_ESC_ESC%%
+        //在广告点击时调用该宏来帮Ad Exchange监测点击数据
+        required string creative_content = 7;
+        //素材高度
+        required int32 creative_height = 8;
+        //素材宽度
+        required int32 creative_width = 9;
+        //创意在DSP中的唯一ID，用于数据对比、创意审核以及素材托管
+        optional string creative_id = 10;
+        //广告点击目标地址，素材使用代码和VAST方式时不需要
+        //素材方式为9:HTML5 Inline Document时，目标地址为必填
+        optional string click_through_url = 11;
+        //预留PV监测，素材使用代码和VAST方式时不需要
+        repeated string impression_tracking = 12;
+       //预留点击监测，素材使用代码和VAST方式时不需要
+        repeated string click_tracking = 13;
+        //自定义数据
+        optional string extend_data = 14;
+        //视频广告播放时长，视频广告展现形式为贴片使用
+        optional uint32 duration = 15;
+         //winnotice
+        optional string winnotice = 16;
+
+
+    }
+}
+

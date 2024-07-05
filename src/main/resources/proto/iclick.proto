@@ -1,0 +1,340 @@
+syntax = "proto2";
+
+package iclick;
+
+message FloorPrice {
+    optional int64 industry = 1;
+    optional int32 price = 2;
+    optional int32 skippable_roll_price = 3;
+}
+
+message UserFeature {
+    optional string key = 1;
+    optional string value = 2;
+}
+
+message UserSession {
+    repeated uint64 delivered_creative_numeralization_value = 2;
+}
+
+message Banner {
+    // 广告位ID
+    optional int64 ad_zone_id = 4;
+    // 广告类型
+    optional int32 ad_type = 12;
+
+    repeated int64 creative_template = 13;
+
+    extensions 100 to max;
+}
+
+message Video {
+    optional int64 ad_zone_id = 1;
+    optional int32 linearity = 3;
+
+    optional int32 ad_type = 13;
+
+    optional int32 minduration = 4;
+
+    optional int32 maxduration = 5;
+
+    optional int32 protocol = 6;
+
+    optional int32 w = 7;
+
+    optional int32 h = 8;
+
+    optional int32 startdelay = 9;
+
+    optional bool is_entire_roll = 14 [default = false];
+
+    optional int32 video_startdelay = 15;
+}
+
+message Impression {
+    optional string id = 1;
+
+    optional Banner banner = 2;
+    optional Video video = 3;
+
+    repeated FloorPrice floor_price = 9;
+    optional int32 bidfloor = 4 [default = 0];
+
+    optional int32 campaign_id = 5;
+
+    repeated int32 blocked_ad_tag = 6;
+
+    repeated int32 blocked_ad_attribute = 7;
+
+    optional bool is_pmp = 8 [default = false];
+
+    optional int32 extended_ads_position = 10 [default = 0];
+
+    optional int32 impression_date = 11;
+
+    optional int32 max_skippable_roll_ads = 12;
+
+    optional int32 skippable_roll_bidfloor = 13;
+
+    optional int32 info_stream_max_bids_allowed = 15;
+
+    extensions 100 to max;
+}
+
+message Site {
+    optional int32 id = 1;
+    optional string app_bundle_id = 2;
+    optional Content content = 11;
+}
+
+message Content {
+    optional string title = 3;
+
+    optional string url = 6;
+
+    repeated string keyword = 9;
+
+    optional int32 len = 16;
+
+    optional int64 album_id = 20;
+
+    optional int64 channel_id = 22;
+
+    repeated string region = 23;
+
+    repeated string category = 24;
+
+    optional string release_date = 25;
+
+    repeated string starring = 26;
+
+    repeated string video_quality = 27;
+
+    repeated string tag = 28;
+
+    repeated int64 video_tag = 29;
+
+    optional string video_clip_id = 31;
+}
+
+message Device {
+    optional string ua = 2;
+
+    optional string ip = 3;
+
+    optional Geo geo = 4;
+
+    optional int32 connection_type = 15;
+
+    optional int32 platform_id = 18;
+
+    repeated int64 feature = 19;
+
+    optional string android_id = 20;
+
+    optional string model = 21;
+
+    optional string os = 22;
+
+    optional string os_version = 23;
+
+    optional string app_version = 24;
+
+    optional string ipv6 = 25;
+
+    optional string idfa = 26;
+
+    optional string openudid = 27;
+
+    optional string imei = 28;
+
+    optional string mac = 29;
+
+    optional string oaid = 30;
+
+    optional int32 screen_height = 32;
+    optional int32 screen_width = 33;
+
+    repeated int64 installed_app = 34;
+
+    optional string manufacturer = 35;
+
+    optional string carrier_name = 36;
+
+    optional string idfv = 37;
+
+    optional string local_timezone = 38;
+
+    optional int64 os_update_time = 39;
+
+    optional int64 startup_time = 40;
+
+    optional int32 cpu_num = 41;
+
+    optional int64 disk_total = 42;
+
+    optional int64 mem_total = 43;
+
+    // -1 Not Supported
+    // 0 Not Determined
+    // 1 Restricted
+    // 2 Denied
+    // 3 Authorized
+    optional int32 auth_status = 44;
+}
+
+message Geo {
+    optional int32 country = 3;
+    optional int32 metro = 5;
+    optional int32 city = 6;
+    optional double longitude = 7;
+    optional double latitude = 8;
+    optional string geohash = 9;
+}
+
+message ViewingHistory {
+  optional string video_title = 1;
+  repeated string video_tag = 2;
+  repeated int64 multi_publish_channel_ids = 3;
+}
+
+message User {
+    // The unique identifier of this user on the exchange.
+    // For IOS, this is IDFA, UDID or MAC address.
+    // For Android, this is IMEI, AndroidID or MAC address.
+    optional string id = 1;
+
+    //This field will be set true if the privacy of the current user should be protected.
+    optional bool is_privacy_protected = 2 [default = false];
+
+    repeated int32 dmp_id = 4;
+
+    // Each UserFeature contains key and value fields.
+    // For example,
+    // UserFeature {
+    //   key: "f1",
+    //   value: "10"
+    // }
+    repeated UserFeature feature = 5;
+
+    optional UserSession session = 6;
+
+    // This field indicates viewing histories of the user ordered by date.
+    repeated ViewingHistory viewing_history = 7;
+
+    repeated string interest_tag = 8;
+}
+
+message BidRequest {
+    // Note, the value of this field is not unique.
+    optional string id = 1;
+
+    optional User user = 2;
+    optional Site site = 3;
+    optional Device device = 5;
+
+    // The list of impression objects. Multiple impression auctions may be
+    // specified in a single bid request. At least one impression is required
+    // for a valid bid request.
+    repeated Impression imp = 8;
+
+    optional bool is_test = 9 [default = false];
+
+    optional bool is_ping = 10 [default = false];
+
+    extensions 100 to max;
+}
+
+message Settlement {
+    optional uint32 version = 1;
+    required bytes price = 2;
+    optional bytes auth = 3;
+}
+
+message Bid {
+    required string id = 1;
+
+    required string impid = 2;
+
+    required int32 price = 3;
+
+    required Adm adm = 4;
+
+    optional int32 startdelay = 5;
+
+    optional string deeplink_url = 6;
+    optional string apk_name = 7;
+
+    optional string creative_content = 8;
+
+    optional string universal_link_url = 9;
+
+    optional string feed_back_info = 10;
+
+    optional bool download_from_store = 11;
+
+    // When a bid is returned according to user data such as age, interest,
+    // gender and so on, this field should be set to true.
+    optional bool is_precision_advertising = 12 [default = false];
+
+    extensions 100 to max;
+}
+
+message Adm {
+    // The list of adm objects. describing the advertisement of this bid.
+    optional string native_title = 1;   // 广告标题
+    optional string native_desc = 2;    // 广告描述
+    required string win_notice_url = 3;     // 竞价胜出反馈的url，其中可选添加宏${SETTLEMENT},会替换为结算价格（解密方式见“曝光监测接口与解密方式”，不支持https）。
+    required string ck_monitior_url = 4;    // dsp侧 点击监测
+    repeated string pmo = 5;        // 第三方曝光监测
+    repeated string cmo = 6;        // 第三方点击监测
+    optional int64  duration = 7;   // 视频播放时长 单位：秒
+    optional ClickThroughs click_throughs = 8;  // 落地页
+    optional string icon = 9;       // dsp logo图
+    repeated Events tracking_events = 10; // 追踪事件
+    optional string version = 11; // 协议版本号
+    required string adid = 12; // dsp侧创意ID
+    optional DspInfo dsp_info= 13; // dsp名称
+}
+
+message DspInfo {
+    optional string version = 1;    //
+    optional string name = 2;   // dsp name
+}
+message Events {
+    // 落地页类型
+    enum TrackingEvent {
+        firstQuartile = 0;   // "播放25%"  只对贴片有效
+        midpoint = 1; // "播放50%"  只对贴片有效
+        thirdQuartile = 2;  // "播放75% "   只对贴片有效
+        complete = 3;  // "播放100%结束"   只对贴片有效
+        downloadStart = 4;  // 下载开始
+        downloaded = 5;  // 下载结束
+        installed = 6;  // 安装
+    }
+    optional TrackingEvent event = 1;
+    optional double percent = 2;
+    optional string tracking_url = 3;
+}
+
+message ClickThroughs {
+    // 落地页类型
+    optional string click_type = 1;
+    optional string url = 2;    // 落地页
+}
+
+message Seatbid {
+    // The list of bid objects. Each bid object should be related to an impression
+    // object in the bid request.
+    repeated Bid bid = 1;
+}
+
+message BidResponse {
+    // This id should be the same as the id of the corresponding BidRequest.
+    required string id = 1;
+
+    // The list of seatbid objects.
+    repeated Seatbid seatbid = 2;
+
+    extensions 100 to max;
+}

@@ -1,0 +1,361 @@
+syntax = "proto2";
+package commonDsp;
+
+message Request {
+
+    // 当前协议版本号，目前为1
+    required int32 version = 1;
+
+    // 此请求的唯一id
+    required string id = 2;
+
+    // 可展示的位置
+    message Impression  {
+        // 此impression在当前Request中的唯一id,从0开始
+        required int32 id = 1;
+
+        // 广告位id, 由ADFusion分配
+        required string pid = 2;
+
+        //广告位的宽和高
+        optional int32 width = 3;
+        optional int32 height = 4;
+
+        // 0 - 未知, 1~5 - 一~五屏, 6 - 五屏以下
+        optional int32 pos = 5;
+		
+		//支持的sdk
+		optional string channels = 6;
+
+        // 视频相关
+        message Video {
+            //中贴的情况下，相对于源片起始位置的偏移量，单位(秒)
+            optional int32 start_delay = 1;
+
+            // 当前imp相对于其所在前、中、后贴起始位置的偏移量，单位（毫秒）
+            optional int32 section_start_delay = 2;
+
+            // 最小播放时长,单位(毫秒)
+            optional int32 min_duration = 3;
+
+            // 最大播放时长,单位(毫秒)
+            optional int32 max_duration = 4;
+        }
+        optional Video video = 7;
+
+        // 是否全屏(插播广告or全屏广告)
+        optional bool is_fullscreen = 8 [default = false];
+
+        // 广告位支持的api frameworks
+        // 1 VPAID 1.0; 2 VPAID 2.0; 3 MRAID-1; 4 ORMMA; 5 MRAID-2
+        repeated int32 api  = 9;
+
+        // 可以展示的创意数量
+        optional int32 slot_num = 10 [default = 1];
+
+        message Deal {
+            // 媒体分配的dealid
+            required string deal_id = 1;
+
+            //此Deal对应的价格, 单位(分)
+            required int32 min_price = 2;
+        }
+        repeated Deal deal = 11;
+
+        //预投放日期, 仅开屏使用，格式:"20160602"
+        optional string campaign_date = 12;
+
+        // native模板id
+        repeated string native_template_id = 13;
+    }
+    repeated Impression imp = 3;
+
+    message Site {
+        // 当前资源位所在页面的url
+        optional string page_url = 1;
+
+        // 当前页面的refer url
+        optional string refer_url = 2;
+
+        // 网页信息
+        message Content {
+            // 标题
+            optional string title = 1;
+
+            // 关键词
+            repeated string keywords = 2;
+
+            // 网页类目
+            repeated string category = 3;
+
+            // 视频的播放时长,单位(秒)
+            optional int32 duration = 4;
+        }
+        optional Content content = 3;
+    }
+    optional Site site = 4;
+
+    // 设备信息
+    message Device {
+        // ipv4 点分十进制, 必须为终端真实IP地址
+        optional string ip = 1;
+
+        // user agent，来自http头
+        optional string user_agent = 2;
+
+        // IOS6.0及以上的idfa号
+        optional string idfa = 3;
+
+        // 安卓设备的imei号
+        optional string imei = 4;
+
+        // 安卓设备的imei号的md5值,若填写imei原值，则不用填此字段
+        optional string imei_md5 = 5;
+
+        // 设备的mac地址
+        optional string mac = 6;
+
+        // 设备的mac地址的md5值, 若填写mac原值，则不用填此字段
+        optional string mac_md5 = 7;
+
+        // android_id
+        optional string android_id = 8;
+
+        // 设备类型，0-手机;1-平板;2-PC;3-互联网电视
+        optional int32 device_type = 9;
+
+        // 设备品牌
+        // 例如：nokia, samsung
+        optional string brand = 10;
+
+        // 设备型号
+        // 例如：n70, galaxy
+        optional string model = 11;
+
+        // 操作系统
+        // 例如：Android,iOS
+        optional string os = 12;
+
+        // 操作系统版本
+        // 例如：7.0.2
+        optional string osv = 13;
+
+        // 设备所处网络环境 0-未识别, 1-wifi, 2-2g, 3-3g, 4-4g
+        optional int32 network  = 14 [ default = 1 ];
+
+        // 设备的网络运营商 0-未知, 1-移动, 2-联通, 3-电信
+        optional int32 operator = 15;
+
+        // 设备屏幕尺寸：宽
+        optional int32 width = 16;
+
+        // 设备屏幕尺寸：高
+        optional int32 height = 17;
+
+        // 设备密度，对应于pixel_ratio
+        optional int32 pixel_ratio = 18 [default=1000];
+
+        // 屏幕方向 0-未知, 1-竖屏, 2-横屏
+        optional int32 orientation = 19;
+
+        // 用户所处时区的分钟偏移量
+        // 例如：如果是东八区，则 timezone_offset = 60 * 8 = 480.
+        optional int32 timezone_offset = 20[ default = 480 ];
+
+        message Geo {
+            // 纬度, 取值范围[-90.0 , +90.0]
+            optional double lat = 1;
+            // 经度, 取值范围[-180.0 , +180.0]
+            optional double lon = 2;
+        }
+        optional Geo geo = 21;
+
+        // 用户已安装 app 列表
+        repeated string installed_app = 22;
+
+		// 海信设备序列号
+        optional string deviceid = 23;
+
+		// IPHONE 设备的idfa号的md5值,若填写idfa原值，则不用填此字段
+        optional string idfa_md5 = 24;
+
+	//Android10以上手机获取不到imei号用此字段代替
+	optional string oaid = 25;
+	//海信手机广告SDK版本
+	optional string version_code = 26;
+    }
+    optional Device device = 5;
+
+    // APP属性
+    message App {
+        // 应用包名, 例如：com.moji.MojiWeather
+        optional string package_name = 1;
+
+        // 应用名，例如：陌陌
+        optional string app_name = 2;
+		
+        // 应用唯一标识
+        optional string app_id = 3;
+        // app类目
+        repeated string category = 4;
+    }
+    optional App app = 6;
+
+    // 用户数据
+    message User {
+        //PC、WAP流量为用户在聚好看域下的cookie标记
+        optional string id = 1;
+
+        //阿里内部使用
+        optional string aid = 2;
+        //阿里内部使用
+        optional string nick_name = 3;
+        //阿里内部使用
+        optional string ap_id = 4;
+    }
+    optional User user = 7;
+
+    //页面或者用户的语言
+    optional string detected_language = 8;
+
+    optional string trace_key = 9;
+
+    // 是否必须返回https广告
+    optional bool https_required = 10 [default = false];
+	// 广告对接方式 0-终端 1-系统端
+    optional  int32 docking_type = 11 [default = 1];
+}
+
+message Response {
+    //对应Request中的id
+    optional string id = 1;
+
+    // 0-ok，其他值表示无广告返回
+    optional int32 status = 2 [ default = 0 ];
+
+	//流量订单id
+	optional string distribute_id = 3;
+	 message Demand {
+		//广告源
+        optional string name = 1;
+		//广告元code
+        required string code = 2;
+		//三方sdk注册appid
+		required string appid = 3;
+		//三方SDK分配广告位
+		required string posid = 4;
+    }
+	optional Demand demand = 4;
+
+    // 一个位置上的广告
+    message Seat {
+        // 指定请求里的impression id
+        required int32 id = 1;
+
+        // 广告字段
+        message Ad {
+            // 广告序号，为0
+            required int32 id = 1;
+
+            // 广告代码片段，html/imgpath/displayurl
+            optional string adcontent = 2;
+
+            // 创意类型
+            // 1 文字 2 图片 3 Flash 4 视频
+            optional int32 creative_type = 3;
+			optional int32 interaction_type = 4;
+			optional int32 skip = 5;
+
+            // 广告类目
+            repeated int32 category = 6;
+
+            // 最终目标landing页
+            repeated string destination_url = 7;
+
+            // 展现反馈地址
+            repeated string impression_tracking_url = 8;
+
+            // 点击跳转地址
+            optional string click_through_url = 9;
+
+            // 点击跟踪地址
+            repeated string click_tracking_url = 10;
+
+            // 同一流媒体素材的多个文件地址,可根据客户端环境选择
+            message VideoAd {
+                // 属性（描述）信息
+                message Attr{
+                    // 属性名
+                    required string  name = 1;
+
+                    // 属性值
+                    required string value = 2;
+                }
+                repeated Attr attr = 1;
+
+                //视频模板id
+                optional int32 template_id = 2;
+            }
+            optional VideoAd video_ad = 11;
+
+            message NativeAd {
+                // 属性（描述）信息
+                message Attr{
+                    // 属性名
+                    required string  name = 1;
+
+                    // 属性值
+                    required string value = 2;
+                }
+                repeated Attr attr = 1;
+
+                //natvie模板id
+                optional int32 template_id = 2;
+            }
+            optional NativeAd native_ad = 12;
+
+            //需要的api支持
+            repeated int32 api = 13;
+
+            //指定媒体deal_id
+            optional string deal_id = 14;
+            //计划投放日期, 仅开屏使用，如:"20160602"
+            optional string campaign_date = 15;
+
+            //广告创意的唯一标识
+            optional string creative_id = 16;
+
+            //广告来源
+            optional string ad_source = 17;
+
+            //APP唤醒地址
+            optional string deeplink_url = 18;
+
+            //APP下载地址
+            optional string download_url = 19;
+
+            //广告报价,单位(分)
+            optional int32 price = 20;
+            //广告结算价,单位(分)
+            optional int32 settle_price = 21;
+            //adx计入场景, 返回报价供上游adx竞价, 单位(分)
+            optional int32 bid_price = 22;
+
+            // 事件监测url
+            message EventTrack {
+                optional uint32 type = 1;
+                repeated string url = 2;
+            }
+            repeated EventTrack event_track = 23;
+			//广告布局
+            optional int32 layout = 24;
+	        //对于下载类/deeplink类广告，可以实用次字段 判断当前设备是否已安装此应用
+	        optional string app_package = 25;
+	        //应用文件大小 下载类广告（应用）文件大小
+	        optional string app_size = 26;
+        }
+        repeated Ad ad = 2;
+    }
+    repeated Seat seat = 5;
+}
+
